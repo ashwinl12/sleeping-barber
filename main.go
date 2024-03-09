@@ -26,8 +26,7 @@ type Customer struct {
 }
 
 func main() {
-	customerStopCh := make(chan struct{})
-	barberStopCh := make(chan struct{})
+	shopStopCh := make(chan struct{})
 	shopTimer := time.NewTimer(time.Duration(15 * time.Second))
 
 	waitingList := make(chan Customer, 3)
@@ -46,7 +45,7 @@ func main() {
 		}
 
 		// call the barber func as go routine
-		go BarberFunc(&newBarber, waitingList, &barberWaitGrp, &customerWaitGrp, barberStopCh)
+		go BarberFunc(&newBarber, waitingList, &barberWaitGrp, &customerWaitGrp, shopStopCh)
 		barberIdCounter++
 	}
 
@@ -74,14 +73,13 @@ func main() {
 			}
 			time.Sleep(1 * time.Second)
 		}
-	}(customerStopCh)
+	}(shopStopCh)
 
 	// wait for the timer to expire
 	<-shopTimer.C
 
 	// then close channel
-	close(customerStopCh)
-	close(barberStopCh)
+	close(shopStopCh)
 
 	customerWaitGrp.Wait()
 	barberWaitGrp.Wait()
